@@ -1,0 +1,96 @@
+<template>
+  <div>
+   
+    <ul
+
+      v-infinite-scroll="loadMore"
+        infinite-scroll-disabled="loading"
+        infinite-scroll-distance="0"
+        infinite-scroll-immediate-check= "false"
+    >
+      <li v-for="data in datalist" @click="handleClick(data.id)" :key="data.id">
+        <img :src="data.poster.origin"/>
+
+        <div>
+          <h3>{{data.name}}</h3>
+          <p>{{data.intro}}</p>
+        </div>
+      </li>
+    </ul>
+    <p>{{loadingText}}</p>
+  </div>
+</template>
+
+<script type="text/javascript">
+import axios from "axios";
+import router from "../router";
+  export default{
+    name:'nowplaying',
+    
+    data(){
+      return {
+        datalist:[],
+        loading:false,
+        current:1,
+        total:0,
+        loadingText:"正在加载中..."
+      }
+    },
+
+    mounted(){
+      axios.get("/v4/api/film/now-playing?page=1&count=7").then(res=>{
+        console.log(res.data);
+        this.datalist =res.data.data.films
+
+        this.total = res.data.data.page.total;//总页数
+      })
+    },
+
+    methods:{
+      handleClick(id){
+        console.log("111");
+        //编程式跳转
+        
+        // router.push("/card");
+        // router.push({name:"kerwincard"}); 
+        // router.push("/detail/1111");
+        router.push(`/detail/${id}`);
+
+        // router.push("/detail?id=11111");
+        // router.push({name:"detail2",query:{id:data}});
+
+      },
+      loadMore(){
+        console.log("加载更多");
+
+        this.current++;
+
+        if(this.current>this.total){
+          //所有数据取完了
+          //
+          this.loading = true;
+          this.loadingText= "所有的数据加载完成";
+          return;
+        }
+        axios.get(`/v4/api/film/now-playing?page=${this.current}&count=7`).then(res=>{
+          console.log(res.data);
+          this.datalist = [...this.datalist,...res.data.data.films]
+        })
+      }
+
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  ul{
+    li{
+      padding:5px;
+      overflow:hidden;
+      img{
+        float:left;
+        width:100px;
+      }
+    }
+  }
+</style>
